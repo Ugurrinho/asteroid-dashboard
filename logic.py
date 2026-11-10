@@ -18,7 +18,14 @@ RED_DISTANCE_KM = 1_000_000
 YELLOW_DISTANCE_KM = 7_500_000
 YELLOW_SPEED_KMS = 25.0
 
+MOON_DISTANCE_KM = 384_400
+
 GREEN, YELLOW, RED = "yaşıl", "sarı", "qırmızı"
+
+
+def _az(value, digits):
+    """Rəqəmi Azərbaycan qaydasında yazır: onluq hissə vergüllə (5,98)."""
+    return f"{value:.{digits}f}".replace(".", ",")
 
 
 def _get(asteroid, key):
@@ -39,14 +46,14 @@ def classify(asteroid):
     dist_mln = distance / 1e6
 
     if hazardous and distance < RED_DISTANCE_KM:
-        return RED, f"{name} təhlükəlidir və Yerə cəmi {dist_mln:.2f} mln km yaxınlaşır."
+        return RED, f"{name} təhlükəlidir və Yerə cəmi {_az(dist_mln, 2)} mln km yaxınlaşır."
     if hazardous:
-        return YELLOW, f"{name} təhlükəli sayılır, amma {dist_mln:.2f} mln km uzaqdan keçir."
+        return YELLOW, f"{name} təhlükəli sayılır, amma {_az(dist_mln, 2)} mln km uzaqdan keçir."
     if distance < YELLOW_DISTANCE_KM:
-        return YELLOW, f"{name} Yerə {dist_mln:.2f} mln km yaxınlaşır, izləmək lazımdır."
+        return YELLOW, f"{name} Yerə {_az(dist_mln, 2)} mln km yaxınlaşır, izləmək lazımdır."
     if speed > YELLOW_SPEED_KMS:
-        return YELLOW, f"{name} çox sürətlidir ({speed:.1f} km/s), izləmək lazımdır."
-    return GREEN, f"{name} təhlükəsizdir: {dist_mln:.2f} mln km uzaqdan, {speed:.1f} km/s sürətlə keçir."
+        return YELLOW, f"{name} çox sürətlidir ({_az(speed, 1)} km/s), izləmək lazımdır."
+    return GREEN, f"{name} təhlükəsizdir: {_az(dist_mln, 2)} mln km uzaqdan, {_az(speed, 1)} km/s sürətlə keçir."
 
 
 def weekly_summary(df):
@@ -73,6 +80,15 @@ def dashboard_stats(df):
         "hazardous": int(df["hazardous"].sum()),
         "closest_mln_km": float(df["distance_km"].min()) / 1e6 if len(df) else None,
     }
+
+
+def with_status(df):
+    """Hər sətrə classify() nəticəsini əlavə edir: `status` (rəng) və `note` (izah)."""
+    pairs = [classify(row) for _, row in df.iterrows()]
+    return df.assign(
+        status=[p[0] for p in pairs],
+        note=[p[1] for p in pairs],
+    )
 
 
 def daily_counts(df):

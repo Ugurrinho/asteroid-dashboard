@@ -86,3 +86,17 @@ def test_simulator_14_days_and_red_only_on_day_10():
 
 def test_simulator_is_reproducible():
     pd.testing.assert_frame_equal(simulate(seed=1), simulate(seed=1))
+
+
+def test_with_status_adds_color_and_note():
+    import pandas as pd
+    from logic import RED, GREEN, with_status
+
+    df = pd.DataFrame([
+        {"name": "A", "speed_kms": 10.0, "distance_km": 500_000, "hazardous": 1},
+        {"name": "B", "speed_kms": 10.0, "distance_km": 50_000_000, "hazardous": 0},
+    ])
+    out = with_status(df)
+    assert list(out["status"]) == [RED, GREEN]
+    assert out["note"].str.startswith(("A", "B")).all()
+    assert with_status(df.iloc[0:0]).empty
