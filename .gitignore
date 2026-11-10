@@ -1,0 +1,10 @@
+# Secrets - never commit
+.env
+*.env
+.env.*
+!.env.example
+
+asteroid.db
+__pycache__/
+*.pyc
+.pytest_cache/
